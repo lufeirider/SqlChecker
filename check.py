@@ -1,10 +1,8 @@
 # encoding=utf8
 from parse import *
-from setting import MARKFLAG
 from common import *
 
 requests.packages.urllib3.disable_warnings()
-
 
 # 注入的数据库
 g_sql_info['dbms'] = ''
@@ -15,11 +13,13 @@ g_sql_info['false_payload'] = ''
 g_sql_info['sql_mark'] = False
 g_sql_info['false_ratio'] = None
 
-
 g_sql_info['upper_ratio'] = UPPER_RATIO
 g_sql_info['upper_payload'] = ''
 g_sql_info['lower_ratio'] = LOWER_RATIO
 g_sql_info['lower_payload'] = ''
+
+# 检测结果
+g_sql_info['result'] = []
 
 req = '''
 POST /guest/edit.php?id=2 HTTP/1.1
@@ -31,7 +31,7 @@ User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like 
 Content-Type: application/x-www-form-urlencoded
 Content-Length: 13
 
-people={"age":11,"name":"lufei"}
+id=2
 '''
 
 
@@ -173,8 +173,6 @@ if req_info['method'] == 'POST':
 
                 # 进行标记检查
                 check_mark_sql(req_poc_info, g_payload_dict)
-
-
         # post data参数检测
         else:
             poc_param_list = []
@@ -185,10 +183,8 @@ if req_info['method'] == 'POST':
             else:
                 poc_param_list = poc_param_list[0:param_index] + [(param[0], param[1] + SQLMARK)] + poc_param_list[param_index + 1:]
 
-
             def link(param):
                 return param[0] + '=' + param[1]
-
 
             data = '&'.join(map(link, poc_param_list))
 
