@@ -22,7 +22,16 @@ g_sql_info['lower_ratio'] = LOWER_RATIO
 g_sql_info['lower_payload'] = ''
 
 req = '''
-http://127.0.0.1/guest/edit.php?id=2
+POST /guest/edit.php?id=2 HTTP/1.1
+Host: 127.0.0.1
+Connection: close
+Accept-Encoding: gzip, deflate
+Accept: */*
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.21
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 13
+
+people={"age":11,"name":"lufei"}
 '''
 
 
@@ -60,7 +69,6 @@ if re.search(MULTIPART_REGEX, req_info['data']):
         req_poc_info = req_info.copy()
         req_poc_info['data'] = req_info['data'][:param.regs[1][0]] + param.group(1) + SQLMARK + req_info['data'][param.regs[1][1]:]
         check_mark_sql(req_poc_info, g_payload_dict)
-        check_ratio()
     exit()
 # json
 elif re.search(JSON_REGEX, req_info['data']):
@@ -70,14 +78,12 @@ elif re.search(JSON_REGEX, req_info['data']):
         req_poc_info = req_info.copy()
         req_poc_info['data'] = req_info['data'][:param.regs[1][0]] + param.group(1) + '##' + req_info['data'][param.regs[1][1]:]
         check_mark_sql(req_poc_info, g_payload_dict)
-        check_ratio()
     #数字型 要把数字型加上双引号，不然没办法添加payload
     param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*)(-?\d[\d\.]*)\b', req_info['data'])
     for param in param_tuple:
         req_poc_info = req_info.copy()
         req_poc_info['data'] = req_info['data'][:param.regs[3][0]] + '"' + param.group(3) + SQLMARK +'"' + req_info['data'][param.regs[3][1]:]
         check_mark_sql(req_poc_info, g_payload_dict)
-        check_ratio()
     #数组型
     #param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*)((true|false|null))\b', req_info['data'])
     #列表型
@@ -90,14 +96,12 @@ elif re.search(JSON_REGEX, req_info['data']):
             req_poc_info = req_info.copy()
             req_poc_info['data'] = req_info['data'].replace(list_str,list_str[:param.regs[1][0]] + param.group(1) + SQLMARK + list_str[param.regs[1][1]:])
             check_mark_sql(req_poc_info, g_payload_dict)
-            check_ratio()
         #列表中的数字型
         param_tuple = re.finditer(r'(\A|,|\s+)(-?\d[\d\.]*\b)', list_str)
         for param in param_tuple:
             req_poc_info = req_info.copy()
             req_poc_info['data'] = req_info['data'].replace(list_str, list_str[:param.regs[2][0]] + '"' + param.group(2) + SQLMARK + '"' + list_str[param.regs[2][1]:])
             check_mark_sql(req_poc_info, g_payload_dict)
-            check_ratio()
     exit()
 # xml类型
 elif re.search(XML_REGEX,req_info['data']):
@@ -106,7 +110,6 @@ elif re.search(XML_REGEX,req_info['data']):
         req_poc_info = req_info.copy()
         req_poc_info['data'] = req_poc_info['data'][:param.regs[4][0]] + param.group(4) + SQLMARK + req_poc_info['data'][param.regs[4][1]:]
         check_mark_sql(req_poc_info, g_payload_dict)
-        check_ratio()
     exit()
 
 #form注入检测
@@ -115,141 +118,112 @@ if req_info['method'] == 'POST':
     unquote_post_param_list = parse_data(req_info['data'])
 
     #解析url参数
-    url = urlparse.urlparse(req_info['url'])
-    unquote_get_param_list = parse_data(url.query)
+    parse_url = urlparse.urlparse(req_info['url'])
+    unquote_get_param_list = parse_data(parse_url.query)
 
     # post中data参数存在注入
     for param_index, param in enumerate(unquote_post_param_list):
-        #people={"age":11}，param[1]={"age":11}
+        #people={"age":11,"name":"lufei"}，param[1]={"age":11}
         if re.search(JSON_REGEX, param[1]):
             #循环json里面的字符串类型
             json_param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*".*?)"(?<!\\")', param[1])
             for json_param in json_param_tuple:
-                for dbms in g_payload_dict:
-                    for payload in g_payload_dict[dbms]:
-                        exp_param_list = []
-                        exp_param_list = exp_param_list + unquote_post_param_list
-                        poc_json_param = param[1][:json_param.regs[1][0]] + json_param.group(1) + payload + param[1][json_param.regs[1][1]:]
-                        # payload构造
-                        if param_index == 0:
-                            exp_param_list = [(param[0], poc_json_param)] + exp_param_list[param_index + 1:]
-                        else:
-                            exp_param_list = exp_param_list[0:param_index] + [(param[0], poc_json_param)] + exp_param_list[param_index + 1:]
+                poc_param_list = []
+                poc_param_list = poc_param_list + unquote_post_param_list
+                poc_json_param = param[1][:json_param.regs[1][0]] + json_param.group(1) + SQLMARK + param[1][json_param.regs[1][1]:]
+                # payload构造
+                if param_index == 0:
+                    poc_param_list = [(param[0], poc_json_param)] + poc_param_list[param_index + 1:]
+                else:
+                    poc_param_list = poc_param_list[0:param_index] + [(param[0], poc_json_param)] + poc_param_list[param_index + 1:]
 
-                        def link(param):
-                            return param[0] + '=' + param[1]
+                def link(param):
+                    return param[0] + '=' + param[1]
 
-                        data = '&'.join(map(link, exp_param_list))
+                data = '&'.join(map(link, poc_param_list))
 
-                        g_sql_info['payload'] = payload
-                        g_sql_info['payload_dbms'] = dbms
+                # 构造poc
+                req_poc_info = req_info.copy()
+                req_poc_info['data'] = data
 
-                        # payload检测
-                        if g_sql_info['dbms'] != '' and g_sql_info['dbms'] != dbms:
-                            if g_sql_info['payload_dbms'] != 'All':
-                                continue
-
-                        # 发送payload
-                        req_poc_info = req_info.copy()
-                        req_poc_info['data'] = data
-                        send_request(req_poc_info, 'data')
+                # 进行标记检查
+                check_mark_sql(req_poc_info, g_payload_dict)
 
             # 循环json里面的数字类型
             json_param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*)(-?\d[\d\.]*)\b', param[1])
             for json_param in json_param_tuple:
-                for dbms in g_payload_dict:
-                    for payload in g_payload_dict[dbms]:
-                        exp_param_list = []
-                        exp_param_list = exp_param_list + unquote_post_param_list
-                        poc_json_param = param[1][:json_param.regs[3][0]] + '"' + json_param.group(3) + payload + '"' + param[1][json_param.regs[3][1]:]
-                        # payload构造
-                        if param_index == 0:
-                            exp_param_list = [(param[0], '"' + poc_json_param + '"')] + exp_param_list[param_index + 1:]
-                        else:
-                            exp_param_list = exp_param_list[0:param_index] + [(param[0], poc_json_param )] + exp_param_list[param_index + 1:]
 
-                        def link(param):
-                            return param[0] + '=' + param[1]
+                poc_param_list = []
+                poc_param_list = poc_param_list + unquote_post_param_list
+                poc_json_param = param[1][:json_param.regs[3][0]] + '"' + json_param.group(3) + SQLMARK + '"' + param[1][json_param.regs[3][1]:]
+                # payload构造
+                if param_index == 0:
+                    poc_param_list = [(param[0], '"' + poc_json_param + '"')] + poc_param_list[param_index + 1:]
+                else:
+                    poc_param_list = poc_param_list[0:param_index] + [(param[0], poc_json_param)] + poc_param_list[param_index + 1:]
+
+                def link(param):
+                    return param[0] + '=' + param[1]
+
+                data = '&'.join(map(link, poc_param_list))
+
+                # 构造poc
+                req_poc_info = req_info.copy()
+                req_poc_info['data'] = data
+
+                # 进行标记检查
+                check_mark_sql(req_poc_info, g_payload_dict)
 
 
-                        data = '&'.join(map(link, exp_param_list))
-
-                        g_sql_info['payload'] = payload
-                        g_sql_info['payload_dbms'] = dbms
-
-                        # payload检测
-                        if g_sql_info['dbms'] != '' and g_sql_info['dbms'] != dbms:
-                            if g_sql_info['payload_dbms'] != 'All':
-                                continue
-
-                        # 发送payload
-                        req_poc_info = req_info.copy()
-                        req_poc_info['data'] = data
-                        send_request(req_poc_info, 'data')
-
-            #######################################################
+        # post data参数检测
         else:
-            # post data参数检测
-            for dbms in g_payload_dict:
-                for payload in g_payload_dict[dbms]:
-                    exp_param_list = []
-                    exp_param_list = exp_param_list + unquote_post_param_list
-                    # payload构造
-                    if param_index == 0:
-                        exp_param_list = [(param[0], param[1] + payload)] + exp_param_list[param_index + 1:]
-                    else:
-                        exp_param_list = exp_param_list[0:param_index] + [(param[0], param[1] + payload)] + exp_param_list[param_index + 1:]
-                    def link(param):
-                        return param[0] + '=' + param[1]
-                    data = '&'.join(map(link, exp_param_list))
+            poc_param_list = []
+            poc_param_list = poc_param_list + unquote_post_param_list
+            # payload构造
+            if param_index == 0:
+                poc_param_list = [(param[0], param[1] + SQLMARK)] + poc_param_list[param_index + 1:]
+            else:
+                poc_param_list = poc_param_list[0:param_index] + [(param[0], param[1] + SQLMARK)] + poc_param_list[param_index + 1:]
 
-                    g_sql_info['payload'] = payload
-                    g_sql_info['payload_dbms'] = dbms
-                    # payload检测
-                    if g_sql_info['dbms'] != '' and g_sql_info['dbms'] != dbms:
-                        if g_sql_info['payload_dbms'] != 'All':
-                            continue
 
-                    #发送payload
-                    req_poc_info = req_info.copy()
-                    req_poc_info['data'] = data
-                    send_request(req_poc_info,'data')
-            check_ratio()
+            def link(param):
+                return param[0] + '=' + param[1]
+
+
+            data = '&'.join(map(link, poc_param_list))
+
+            # 构造poc
+            req_poc_info = req_info.copy()
+            req_poc_info['data'] = data
+
+            # 进行标记检查
+            check_mark_sql(req_poc_info, g_payload_dict)
 
     # post中url参数存在注入
     for param_index, param in enumerate(unquote_get_param_list):
         if len(unquote_get_param_list) > 0:
             # 循环参数
             for param_index, param in enumerate(unquote_get_param_list):
-                exp_param_list = []
-                exp_param_list = exp_param_list + unquote_get_param_list
-                # 循环payload
-                for dbms in g_payload_dict:
-                    for payload in g_payload_dict[dbms]:
-                        # payload构造
-                        if param_index == 0:
-                            exp_param_list = [(param[0], param[1] + payload)] + exp_param_list[param_index + 1:]
-                        else:
-                            exp_param_list = exp_param_list[0:param_index] + [(param[0], param[1] + payload)] + exp_param_list[param_index + 1:]
+                poc_param_list = []
+                poc_param_list = poc_param_list + unquote_get_param_list
 
-                        def link(param):
-                            return param[0] + '=' + param[1]
+                # payload构造
+                if param_index == 0:
+                    poc_param_list = [(param[0], param[1] + SQLMARK)] + poc_param_list[param_index + 1:]
+                else:
+                    poc_param_list = poc_param_list[0:param_index] + [(param[0], param[1] + SQLMARK)] + poc_param_list[param_index + 1:]
 
-                        query = '&'.join(map(link, exp_param_list))
+                def link(param):
+                    return param[0] + '=' + param[1]
 
-                        g_sql_info['payload'] = payload
-                        g_sql_info['payload_dbms'] = dbms
-                        # payload检测
-                        if g_sql_info['dbms'] != '' and g_sql_info['dbms'] != dbms:
-                            if g_sql_info['payload_dbms'] != 'All':
-                                continue
+                query = '&'.join(map(link, poc_param_list))
 
-                        # 发送payload
-                        req_poc_info = req_info.copy()
-                        exp_url = url.scheme + "://" + url.netloc + url.path + "?" + query + "#" + url.fragment
-                        req_poc_info['url'] = exp_url
-                        send_request(req_poc_info, 'url')
-                check_ratio()
+                # 构造poc
+                req_poc_info = req_info.copy()
+                req_poc_info['url'] = parse_url.scheme + "://" + parse_url.netloc + parse_url.path + "?" + query + "#" + parse_url.fragment
+
+                # 进行标记检查
+                check_mark_sql(req_poc_info, g_payload_dict)
 
 #url get注入检测
 if req_info['method'] == 'GET':
@@ -264,32 +238,26 @@ if req_info['method'] == 'GET':
             req_poc_info['url'] = mark_url
             check_mark_sql(req_poc_info, g_payload_dict)
 
-    # 动态链接循环参数
-    for param_index, param in enumerate(quote_param_list):
-        exp_param_list = []
-        exp_param_list = exp_param_list + quote_param_list
-        #循环payload
-        for dbms in g_payload_dict:
-            for payload in g_payload_dict[dbms]:
-                # payload构造
-                if param_index == 0:
-                    exp_param_list = [(param[0], param[1] + payload)] + exp_param_list[param_index + 1:]
-                else:
-                    exp_param_list = exp_param_list[0:param_index] + [(param[0], param[1] + payload)] + exp_param_list[param_index + 1:]
-                def link(param):
-                    return param[0] + '=' + param[1]
-                query = '&'.join(map(link, exp_param_list))
+    # 动态链接循环参数,len(quote_param_list) > 0用于有层次感，把这句去掉也可以的
+    if len(quote_param_list) > 0:
+        for param_index, param in enumerate(quote_param_list):
+            poc_param_list = []
+            poc_param_list = poc_param_list + quote_param_list
 
-                g_sql_info['payload'] = payload
-                g_sql_info['payload_dbms'] = dbms
-                #payload检测
-                if g_sql_info['dbms'] != '' and g_sql_info['dbms'] != dbms:
-                    if g_sql_info['payload_dbms'] != 'All':
-                        continue
+            # payload构造
+            if param_index == 0:
+                poc_param_list = [(param[0], param[1] + SQLMARK)] + poc_param_list[param_index + 1:]
+            else:
+                poc_param_list = poc_param_list[0:param_index] + [(param[0], param[1] + SQLMARK)] + poc_param_list[param_index + 1:]
 
-                # 发送payload
-                req_poc_info = req_info.copy()
-                exp_url = parse_url.scheme + "://" + parse_url.netloc + parse_url.path + "?" + query + "#" + parse_url.fragment
-                req_poc_info['url'] = exp_url
-                send_request(req_poc_info,'url')
-        check_ratio()
+            def link(param):
+                return param[0] + '=' + param[1]
+
+            query = '&'.join(map(link, poc_param_list))
+
+            # 构造poc
+            req_poc_info = req_info.copy()
+            req_poc_info['url'] = parse_url.scheme + "://" + parse_url.netloc + parse_url.path + "?" + query + "#" + parse_url.fragment
+
+            # 进行标记检查
+            check_mark_sql(req_poc_info, g_payload_dict)

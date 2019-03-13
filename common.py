@@ -58,20 +58,20 @@ def parse_data(data):
     return quote_param_list
 
 # 解析json
-def parse_json(exp_param_list,param_index,param_name,para_json_value,payload):
+def parse_json(poc_param_list,param_index,param_name,para_json_value,payload):
     json_param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*".*?)"(?<!\\")', para_json_value)
     for json_param in json_param_tuple:
         poc_json_param = para_json_value[:json_param.regs[1][0]] + json_param.group(1) + payload + para_json_value[json_param.regs[1][1]:]
         # payload构造
         if param_index == 0:
-            exp_param_list = [(param_name, poc_json_param)] + exp_param_list[param_index + 1:]
+            poc_param_list = [(param_name, poc_json_param)] + poc_param_list[param_index + 1:]
         else:
-            exp_param_list = exp_param_list[0:param_index] + [(param_name, poc_json_param)] + exp_param_list[param_index + 1:]
+            poc_param_list = poc_param_list[0:param_index] + [(param_name, poc_json_param)] + poc_param_list[param_index + 1:]
 
         def link(param):
             return param[0] + '=' + param[1]
 
-        data = '&'.join(map(link, exp_param_list))
+        data = '&'.join(map(link, poc_param_list))
         return data
 
 
@@ -119,7 +119,7 @@ def check_ratio():
 # 检测
 def check_boolean_inject(rsp):
     global g_sql_info
-    if g_sql_info['payload_dbms'] == 'All':
+    if g_sql_info['payload_dbms'] == 'All' or g_sql_info['payload_dbms'] == 'Test':
         s = SequenceMatcher(None, rsp.content, g_sql_info['true_content'])
         ratio = s.ratio()
         #这里使用or等于的情况是页面都是false情况下，数字型判断name=lufei*1还是返回正确，如果存在注入肯定是后面的'%20'这个payload
