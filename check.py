@@ -22,16 +22,7 @@ g_sql_info['lower_payload'] = ''
 g_sql_info['result'] = []
 
 req = '''
-POST /guest/edit.php?id=2 HTTP/1.1
-Host: 127.0.0.1
-Connection: close
-Accept-Encoding: gzip, deflate
-Accept: */*
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.21
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 13
-
-id=2
+https://www.legendsec.com/view2.php?tid-951-cid-182.html
 '''
 
 
