@@ -35,7 +35,7 @@ get_right_resp(req_info)
 read_xml_payloads()
 
 #检测原始的mark标记注入
-check_mark_sql(req_info)
+g_sql_info.check_mark_sql(req_info)
 
 #有标记的注入不进入下面的检查
 if g_sql_info.mark_flag == True:
@@ -47,7 +47,7 @@ if re.search(MULTIPART_REGEX, req_info['data']):
     for param in param_tuple:
         req_poc_info = req_info.copy()
         req_poc_info['data'] = req_info['data'][:param.regs[1][0]] + param.group(1) + SQLMARK + req_info['data'][param.regs[1][1]:]
-        check_mark_sql(req_poc_info)
+        g_sql_info.check_mark_sql(req_poc_info)
     exit()
 # json
 elif re.search(JSON_REGEX, req_info['data']):
@@ -56,13 +56,13 @@ elif re.search(JSON_REGEX, req_info['data']):
     for param in param_tuple:
         req_poc_info = req_info.copy()
         req_poc_info['data'] = req_info['data'][:param.regs[1][0]] + param.group(1) + '##' + req_info['data'][param.regs[1][1]:]
-        check_mark_sql(req_poc_info)
+        g_sql_info.check_mark_sql(req_poc_info)
     #数字型 要把数字型加上双引号，不然没办法添加payload
     param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*)(-?\d[\d\.]*)\b', req_info['data'])
     for param in param_tuple:
         req_poc_info = req_info.copy()
         req_poc_info['data'] = req_info['data'][:param.regs[3][0]] + '"' + param.group(3) + SQLMARK +'"' + req_info['data'][param.regs[3][1]:]
-        check_mark_sql(req_poc_info)
+        g_sql_info.check_mark_sql(req_poc_info)
     #数组型
     #param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*)((true|false|null))\b', req_info['data'])
     #列表型
@@ -74,13 +74,13 @@ elif re.search(JSON_REGEX, req_info['data']):
         for param in param_tuple:
             req_poc_info = req_info.copy()
             req_poc_info['data'] = req_info['data'].replace(list_str,list_str[:param.regs[1][0]] + param.group(1) + SQLMARK + list_str[param.regs[1][1]:])
-            check_mark_sql(req_poc_info)
+            g_sql_info.check_mark_sql(req_poc_info)
         #列表中的数字型
         param_tuple = re.finditer(r'(\A|,|\s+)(-?\d[\d\.]*\b)', list_str)
         for param in param_tuple:
             req_poc_info = req_info.copy()
             req_poc_info['data'] = req_info['data'].replace(list_str, list_str[:param.regs[2][0]] + '"' + param.group(2) + SQLMARK + '"' + list_str[param.regs[2][1]:])
-            check_mark_sql(req_poc_info)
+            g_sql_info.check_mark_sql(req_poc_info)
     exit()
 # xml类型
 elif re.search(XML_REGEX,req_info['data']):
@@ -88,7 +88,7 @@ elif re.search(XML_REGEX,req_info['data']):
     for param in param_tuple:
         req_poc_info = req_info.copy()
         req_poc_info['data'] = req_poc_info['data'][:param.regs[4][0]] + param.group(4) + SQLMARK + req_poc_info['data'][param.regs[4][1]:]
-        check_mark_sql(req_poc_info)
+        g_sql_info.check_mark_sql(req_poc_info)
     exit()
 
 #form注入检测
@@ -126,7 +126,7 @@ if req_info['method'] == 'POST':
                 req_poc_info['data'] = data
 
                 # 进行标记检查
-                check_mark_sql(req_poc_info)
+                g_sql_info.check_mark_sql(req_poc_info)
 
             # 循环json里面的数字类型
             json_param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*)(-?\d[\d\.]*)\b', param[1])
@@ -151,7 +151,7 @@ if req_info['method'] == 'POST':
                 req_poc_info['data'] = data
 
                 # 进行标记检查
-                check_mark_sql(req_poc_info)
+                g_sql_info.check_mark_sql(req_poc_info)
         # post data参数检测
         else:
             poc_param_list = []
@@ -172,7 +172,7 @@ if req_info['method'] == 'POST':
             req_poc_info['data'] = data
 
             # 进行标记检查
-            check_mark_sql(req_poc_info)
+            g_sql_info.check_mark_sql(req_poc_info)
 
     # post中url参数存在注入
     for param_index, param in enumerate(unquote_get_param_list):
@@ -198,7 +198,7 @@ if req_info['method'] == 'POST':
                 req_poc_info['url'] = parse_url.scheme + "://" + parse_url.netloc + parse_url.path + "?" + query + "#" + parse_url.fragment
 
                 # 进行标记检查
-                check_mark_sql(req_poc_info)
+                g_sql_info.check_mark_sql(req_poc_info)
 
 #url get注入检测
 if req_info['method'] == 'GET':
@@ -211,7 +211,7 @@ if req_info['method'] == 'GET':
             mark_url = parse_url.scheme + "://" + parse_url.netloc + parse_url.path[:digit.regs[0][0]] + digit.group(0) + SQLMARK + parse_url.path[digit.regs[0][1]:]
             req_poc_info = req_info.copy()
             req_poc_info['url'] = mark_url
-            check_mark_sql(req_poc_info)
+            g_sql_info.check_mark_sql(req_poc_info)
 
     # 动态链接循环参数,len(quote_param_list) > 0用于有层次感，把这句去掉也可以的
     if len(quote_param_list) > 0:
@@ -235,4 +235,4 @@ if req_info['method'] == 'GET':
             req_poc_info['url'] = parse_url.scheme + "://" + parse_url.netloc + parse_url.path + "?" + query + "#" + parse_url.fragment
 
             # 进行标记检查
-            check_mark_sql(req_poc_info)
+            g_sql_info.check_mark_sql(req_poc_info)

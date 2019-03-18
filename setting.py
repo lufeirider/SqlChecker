@@ -1,6 +1,6 @@
 # encoding=utf8
 from collections import defaultdict, OrderedDict
-from SqlInfo import SqlInfo
+from SqlChecker import SqlChecker
 
 # 判断延迟的时间
 TIMEOUT = 5
@@ -43,4 +43,4 @@ g_proxy = {'http':'http://127.0.0.1:4321','https':'https://127.0.0.1:4321'}
 #g_proxy = {}
 
 # sql注入的信息都在g_sql_info里面
-g_sql_info = SqlInfo()
+g_sql_info = SqlChecker()
