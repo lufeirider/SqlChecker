@@ -1,5 +1,6 @@
 # encoding=utf8
 from collections import defaultdict, OrderedDict
+from SqlInfo import SqlInfo
 
 # 判断延迟的时间
 TIMEOUT = 5
@@ -37,11 +38,9 @@ ERROR_DBMS_XML = "xml/errors.xml"
 # PAYLOADS XML
 PAYLOADS_XML = "xml/payloads.xml"
 
-# payload 字典
-g_payload_dict = OrderedDict()
-
 # 代理
 g_proxy = {'http':'http://127.0.0.1:4321','https':'https://127.0.0.1:4321'}
 #g_proxy = {}
-# 当前注入的情况
-g_sql_info = {}
+
+# sql注入的信息都在g_sql_info里面
+g_sql_info = SqlInfo()

@@ -29,18 +29,18 @@ def read_file(filename):
 
 # 从xml中读取payload字典当中
 def read_xml_payloads():
-    global g_payload_dict
+    global g_sql_info
     DOMTree = xml.dom.minidom.parse(PAYLOADS_XML)
     collection = DOMTree.documentElement
 
     dbms_collection = collection.getElementsByTagName("dbms")
     for dbms_node in dbms_collection:
         dbms = str(dbms_node.getAttribute("value"))
-        g_payload_dict[dbms] = []
+        g_sql_info.payload_dict[dbms] = []
         payloads = dbms_node.getElementsByTagName('payload')
         for payload in payloads:
             payload = payload.getAttribute("value")
-            g_payload_dict[dbms].append(payload)
+            g_sql_info.payload_dict[dbms].append(payload)
 
 
 # 解析data参数
@@ -91,9 +91,9 @@ def check_dbms_error(html):
             if tag == "error":
                 regexp = attr["regexp"]
                 if re.search(regexp,html):
-                    if g_sql_info['dbms'] == '':
-                        g_sql_info['dbms'] = self.dbms
-                        g_sql_info['result'].append({'type':'error','dbms':self.dbms,'payload':g_sql_info['payload']})
+                    if g_sql_info.dbms == '':
+                        g_sql_info.dbms = self.dbms
+                        g_sql_info.result_list.append({'type':'error','dbms':self.dbms,'payload':g_sql_info.payload})
                         print("##############################################################dbms:"+self.dbms + "##############################################################")
 
     # 创建一个 XMLReader
@@ -111,26 +111,26 @@ def check_dbms_error(html):
 # 检查Boolean注入，检查相似度
 def check_ratio():
     global g_sql_info
-    if g_sql_info['upper_ratio'] - g_sql_info['lower_ratio'] > CHECK_RATIO:
-        g_sql_info['result'].append({'type': 'boolean', 'dbms': 'unknown', 'true payload': g_sql_info['true_payload'],'false payload': g_sql_info['false_payload'],'upper_ratio':str(g_sql_info['upper_ratio']),'lower_ratio':str(g_sql_info['lower_ratio'])})
-        out_result()
-    g_sql_info['upper_ratio'] = UPPER_RATIO
-    g_sql_info['lower_ratio'] = LOWER_RATIO
+    if g_sql_info.upper_ratio - g_sql_info.lower_ratio > CHECK_RATIO:
+        g_sql_info.result_list.append({'type': 'boolean', 'dbms': 'unknown', 'true payload': g_sql_info.true_payload,'false payload': g_sql_info.false_payload,'upper_ratio':str(g_sql_info.upper_ratio),'lower_ratio':str(g_sql_info.lower_ratio)})
+        g_sql_info.out_result()
+    g_sql_info.upper_ratio = UPPER_RATIO
+    g_sql_info.lower_ratio = LOWER_RATIO
 
 # 检测
 def check_boolean_inject(rsp):
     global g_sql_info
-    if g_sql_info['payload_dbms'] == 'All' or g_sql_info['payload_dbms'] == 'Test':
-        s = SequenceMatcher(None, rsp.content.replace(urllib.unquote(g_sql_info['payload']).encode(),''), g_sql_info['true_content'])
+    if g_sql_info.payload_dbms == 'All' or g_sql_info.payload_dbms == 'Test':
+        s = SequenceMatcher(None, rsp.content.replace(urllib.unquote(g_sql_info.payload).encode(),''), g_sql_info.true_content)
         ratio = s.ratio()
         #这里使用or等于的情况是页面都是false情况下，数字型判断name=lufei*1还是返回正确，如果存在注入肯定是后面的'%20'这个payload
-        if g_sql_info['upper_ratio'] < ratio or g_sql_info['upper_ratio'] == ratio:
-            g_sql_info['upper_ratio'] = ratio
-            g_sql_info['true_payload'] = g_sql_info['payload']
+        if g_sql_info.upper_ratio < ratio or g_sql_info.upper_ratio == ratio:
+            g_sql_info.upper_ratio = ratio
+            g_sql_info.true_payload = g_sql_info.payload
         # 这里没有使用or等于的情况是，因为出错情况很随意
-        if g_sql_info['lower_ratio'] > ratio:
-            g_sql_info['lower_ratio'] = ratio
-            g_sql_info['false_payload'] = g_sql_info['payload']
+        if g_sql_info.lower_ratio > ratio:
+            g_sql_info.lower_ratio = ratio
+            g_sql_info.false_payload = g_sql_info.payload
 
 # 检测https
 def check_https(req_info):
@@ -166,7 +166,7 @@ def get_right_resp(req_info):
                 req_right_info['headers'][header] = (req_info['headers'][header]).replace(SQLMARK, "")
 
             rsp = requests.post(req_right_info['url'], data=req_right_info['data'], headers=req_right_info['headers'], proxies=g_proxy, timeout=TIMEOUT,verify=False, allow_redirects=False)
-            g_sql_info['true_content'] = rsp.content
+            g_sql_info.true_content = rsp.content
         except Exception, err:
             print(err)
     if req_info['method'] == 'GET':
@@ -177,7 +177,7 @@ def get_right_resp(req_info):
             for header in req_info['headers']:
                 req_right_info['headers'][header] = (req_info['headers'][header]).replace(SQLMARK, "")
             rsp = requests.get(req_right_info['url'], headers=req_right_info['headers'], proxies=g_proxy, timeout=TIMEOUT, verify=False,allow_redirects=False)
-            g_sql_info['true_content'] = rsp.content
+            g_sql_info.true_content = rsp.content
         except Exception,err:
             print(err)
 
@@ -194,8 +194,8 @@ def send_request(req_info,type):
             check_boolean_inject(rsp)
         except requests.exceptions.Timeout:
             #这里没有使用print(req_info[type]+'存在sql注入')是因为req_info[type]类型不确定，可能是字典或者字符串
-            g_sql_info['result'].append({'type': 'time', 'dbms': g_sql_info['payload_dbms'], 'payload': g_sql_info['payload'], 'position': type, 'poc': req_info[type]})
-            out_result()
+            g_sql_info.result_list.append({'type': 'time', 'dbms': g_sql_info.payload_dbms, 'payload': g_sql_info.payload, 'position': type, 'poc': req_info[type]})
+            g_sql_info.out_result()
             exit()
     if req_info['method'] == 'GET':
         try:
@@ -205,12 +205,12 @@ def send_request(req_info,type):
             check_dbms_error(rsp.content)
             check_boolean_inject(rsp)
         except requests.exceptions.Timeout:
-            g_sql_info['result'].append({'type': 'time', 'dbms': g_sql_info['payload_dbms'], 'payload': g_sql_info['payload'],'position':type,'poc':req_info[type]})
-            out_result()
+            g_sql_info.result_list.append({'type': 'time', 'dbms': g_sql_info.payload_dbms, 'payload': g_sql_info.payload,'position':type,'poc':req_info[type]})
+            g_sql_info.out_result()
             exit()
 
 # 对注入标记进行处理，判断注入
-def check_mark_sql(req_info,payload_dict):
+def check_mark_sql(req_info):
     global g_sql_info
 
     #print(req_info['headers'])
@@ -220,49 +220,49 @@ def check_mark_sql(req_info,payload_dict):
     req_info['cookie'] = req_info['cookie'] if req_info['cookie']!=None else ""
 
     if SQLMARK in req_info['url'] or SQLMARK in str(req_info['headers']) or SQLMARK in req_info['data']:
-        g_sql_info['sql_mark'] = True
+        g_sql_info.mark_flag = True
         if SQLMARK in req_info['url']:
-            for dbms in payload_dict:
-                for payload in payload_dict[dbms]:
+            for dbms in g_sql_info.payload_dict:
+                for payload in g_sql_info.payload_dict[dbms]:
                     # 深拷贝
                     req_poc_info = req_info.copy()
-                    g_sql_info['payload'] = payload
-                    g_sql_info['payload_dbms'] = dbms
+                    g_sql_info.payload = payload
+                    g_sql_info.payload_dbms = dbms
 
-                    if g_sql_info['dbms'] != '' and  g_sql_info['dbms'] != dbms:
+                    if g_sql_info.dbms != '' and  g_sql_info.dbms != dbms:
                         #通用的payload不管dbms是什么都一定跑完，因为其他的payload都有敏感字符，遇到waf就gg了
-                        if g_sql_info['payload_dbms'] != 'All':
+                        if g_sql_info.payload_dbms != 'All':
                             continue
 
                     req_poc_info['url'] = req_info['url'].replace(SQLMARK,payload)
                     send_request(req_poc_info,'url')
             check_ratio()
         if SQLMARK in req_info['data']:
-            for dbms in payload_dict:
-                for payload in payload_dict[dbms]:
+            for dbms in g_sql_info.payload_dict:
+                for payload in g_sql_info.payload_dict[dbms]:
                     # 深拷贝
                     req_poc_info = req_info.copy()
-                    g_sql_info['payload'] = payload
-                    g_sql_info['payload_dbms'] = dbms
+                    g_sql_info.payload = payload
+                    g_sql_info.payload_dbms = dbms
 
-                    if g_sql_info['dbms'] != '' and g_sql_info['dbms'] != dbms:
-                        if g_sql_info['payload_dbms'] != 'All':
+                    if g_sql_info.dbms != '' and g_sql_info.dbms != dbms:
+                        if g_sql_info.payload_dbms != 'All':
                             continue
 
                     req_poc_info['data'] = req_info['data'].replace(SQLMARK, payload)
                     send_request(req_poc_info,'data')
             check_ratio()
         if SQLMARK in str(req_info['headers']):
-            for dbms in payload_dict:
-                for payload in payload_dict[dbms]:
+            for dbms in g_sql_info.payload_dict:
+                for payload in g_sql_info.payload_dict[dbms]:
                     # 深拷贝
                     req_poc_info = req_info.copy()
-                    g_sql_info['payload'] = payload
-                    g_sql_info['payload_dbms'] = dbms
+                    g_sql_info.payload = payload
+                    g_sql_info.payload_dbms = dbms
                     #header头是不会url解码的，所以对于headers进行解码
                     payload = urllib.unquote(payload)
-                    if g_sql_info['dbms'] != '' and g_sql_info['dbms'] != dbms:
-                        if g_sql_info['payload_dbms'] != 'All':
+                    if g_sql_info.dbms != '' and g_sql_info.dbms != dbms:
+                        if g_sql_info.payload_dbms != 'All':
                             continue
 
                     # 因为payload中有双引号，而因为再header头中，所以不能进行url编码会导致json.dumps爆出异常
@@ -275,16 +275,3 @@ def check_mark_sql(req_info,payload_dict):
 
                     send_request(req_poc_info, 'headers')
             check_ratio()
-
-def out_result():
-    for result in g_sql_info['result']:
-        if(result['type'] == 'time'):
-            #g_sql_info['result'].append({'type': 'time', 'dbms': g_sql_info['payload_dbms'], 'payload': g_sql_info['payload'], 'position': type, 'poc': req_info[type]})
-            print('##############type:' + result['type'] + '##############dbms:' + result['dbms'] + '##############payload:' + result['payload'] + '##############position:' + result['position'])
-            print(result['poc'])
-        elif(result['type'] == 'error'):
-            # g_sql_info['result'].append({'type': 'error', 'dbms': self.dbms, 'payload': g_sql_info['payload']})
-            print('##############type:' + result['type'] + '##############dbms:' + result['dbms'] + '##############payload:' + result['payload'])
-        elif(result['type'] == 'boolean'):
-            #g_sql_info['result'].append({'type': 'boolean', 'dbms': 'unknown', 'true payload': g_sql_info['true_payload'], 'false payload': g_sql_info['false_payload'], 'upper_ratio': str(g_sql_info['upper_ratio']), 'lower_ratio': str(g_sql_info['lower_ratio'])})
-            print('##############type:' + result['type'] + '##############dbms:' + result['dbms'] + '##############true_payload:' + g_sql_info['true_payload'] + '##############false_payload:'+ g_sql_info['false_payload'])
