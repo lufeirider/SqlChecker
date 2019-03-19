@@ -10,7 +10,7 @@ g_sql_info.lower_ratio = LOWER_RATIO
 
 
 req = '''
-http://127.0.0.1/guest/edit.php?id=2
+http://www.timi.net.cn/casedetail.php?id=1410@@
 '''
 
 

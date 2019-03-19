@@ -11,7 +11,7 @@ import requests
 ERROR_DBMS_XML = "xml/errors.xml"
 
 # 检测注入的ratio标准,这里比SQLMAP的0.05少是因为这里是检测可疑的注入，而非百分百判断
-CHECK_RATIO = 0.04
+CHECK_RATIO = 0.03
 
 # 上限
 UPPER_RATIO = -1

