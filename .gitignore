@@ -1,3 +1,4 @@
 temp.py
 *.pyc
+*.txt
 .gitignore
