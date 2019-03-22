@@ -215,5 +215,5 @@ class SqlChecker:
                         for header in req_info['headers']:
                             req_poc_info['headers'][header] = (req_info['headers'][header]).replace(SQLMARK, payload)
 
-                            self.send_request(req_poc_info, 'headers')
+                        self.send_request(req_poc_info, 'headers')
                 self.check_ratio()
