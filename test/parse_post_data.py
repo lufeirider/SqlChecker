@@ -5,6 +5,21 @@ import re
 # 为静态
 import re
 import urlparse
+
+# 解析参数
+req = "age=11&id=2&name=lufei"
+
+#字符串型
+#[('age', '11', '&'), ('id', '2', '&'), ('name', 'lufei', '')]
+param_tuple = re.finditer(r'(.*?)=(.*?)(&|$)', req)
+for param in param_tuple:
+    print(param.group(1)) #age
+    print(param.group(2)) #11
+    print(req[:param.regs[2][0]] + param.group(2) + '##' + req[param.regs[2][1]:])
+
+
+
+# 伪静态
 url = 'http://www.freebuf.com/articles/web/74324.html'
 #url = 'https://security.tencent.com/index.php/blog/msg/12'
 #url = 'http://www.csdn.net/article/2014-07-11/2820615-14-world-best-programmers'
@@ -59,18 +74,20 @@ Content-Length: 67
 req = """{"age":11,"name":"lufei","nick":"","id":2,"admin":true,"group":[1,"2",3,1,5]}
 """
 
-#字符串型
-#.+? 更改为 .*? ，主要是防止nick这种空
-param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*".*?)"(?<!\\")', req)
+# 字符串型
+# .+? 更改为 .*? ，主要是防止nick这种空
+param_tuple = re.finditer(r'"(?P<name>[^"]+)"\s*:\s*"(.*?)"(?<!\\")', req)
 for param in param_tuple:
-    print(param.group(2))
-    print(req[:param.regs[1][0]] + param.group(1) + '##' + req[param.regs[1][1]:])
+    print(param.group(1))   #name
+    print(param.group(2))   #lufei
+    print(req[:param.regs[2][0]] + param.group(2) + '##' + req[param.regs[2][1]:])
 
 #数字型
-param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*)(-?\d[\d\.]*)\b', req)
+param_tuple = re.finditer(r'"(?P<name>[^"]+)"\s*:\s*(-?\d[\d\.]*)\b', req)
 for param in param_tuple:
-    print(param.group(2))
-    print(req[:param.regs[3][0]] + '"' + param.group(3) + '##' + '"' + req[param.regs[3][1]:])
+    print(param.group(1)) #age
+    print(param.group(2)) #11
+    print(req[:param.regs[2][0]] + '"' + param.group(2) + '##' + '"' + req[param.regs[2][1]:])
 
 #数组类型
 match = re.search(r'(?P<name>[^"]+)"\s*:\s*\[([^\]]+)\]', req)

@@ -10,7 +10,7 @@ g_sql_info.lower_ratio = LOWER_RATIO
 
 
 req = '''
-http://www.timi.net.cn/casedetail.php?id=1410@@
+http://127.0.0.1/guest/edit.php?id=2
 '''
 
 
@@ -55,7 +55,7 @@ elif re.search(JSON_REGEX, req_info['data']):
     param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*".*?)"(?<!\\")', req_info['data'])
     for param in param_tuple:
         req_poc_info = req_info.copy()
-        req_poc_info['data'] = req_info['data'][:param.regs[1][0]] + param.group(1) + '##' + req_info['data'][param.regs[1][1]:]
+        req_poc_info['data'] = req_info['data'][:param.regs[1][0]] + param.group(1) + SQLMARK + req_info['data'][param.regs[1][1]:]
         g_sql_info.check_mark_sql(req_poc_info)
     #数字型 要把数字型加上双引号，不然没办法添加payload
     param_tuple = re.finditer(r'("(?P<name>[^"]+)"\s*:\s*)(-?\d[\d\.]*)\b', req_info['data'])
