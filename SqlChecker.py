@@ -29,6 +29,8 @@ TIMEOUT = 5
 SQLMARK = "@@"
 
 
+WHITE_PARAM_LIST = ['submit']
+
 
 class SqlChecker:
     dbms = ''
@@ -140,6 +142,8 @@ class SqlChecker:
                 self.result_list.append({'type': 'time', 'dbms': self.payload_dbms, 'payload': self.payload, 'position': type, 'poc': req_info[type]})
                 self.out_result()
                 exit()
+            except:
+                pass
         if req_info['method'] == 'GET':
             try:
                 # 显示参数和poc
@@ -152,6 +156,8 @@ class SqlChecker:
                 self.result_list.append({'type': 'time', 'dbms': self.payload_dbms, 'payload': self.payload,'position':type,'poc':req_info[type]})
                 self.out_result()
                 exit()
+            except:
+                pass
 
     # 对注入标记进行处理，判断注入
     def check_mark_sql(self,req_info):

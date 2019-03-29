@@ -6,10 +6,9 @@ import re
 import re
 import urlparse
 
-# 解析参数
+# 解析key-value参数
 req = "age=11&id=2&name=lufei"
 
-#字符串型
 #[('age', '11', '&'), ('id', '2', '&'), ('name', 'lufei', '')]
 param_tuple = re.finditer(r'(.*?)=(.*?)(&|$)', req)
 for param in param_tuple:
@@ -38,17 +37,17 @@ req = """
      <SOAP-ENV:Header/>
      <SOAP-ENV:Body>
         <urn:GetArrangementByTeacherAndStudent_CurrentDay>
-           <urn:TeacherName>rqalfxgu</urn:TeacherName>
-           <urn:StudentName>rqalfxgu</urn:StudentName>
+           <urn:TeacherName>11111111111</urn:TeacherName>
+           <urn:StudentName>2222222222</urn:StudentName>
         </urn:GetArrangementByTeacherAndStudent_CurrentDay>
      </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 """
 
-
 param_tuple = re.finditer(r"(<(?P<name>[^>]+)( [^<]*)?>)([^<]+)(</\2)",req)
 for param in param_tuple:
-    print(param.group(2))
+    print(param.group(2)) #urn:TeacherName
+    print(param.group(4)) #11111111111
     print(req[:param.regs[4][0]] + param.group(4) + "##" + req[param.regs[4][1]:])
 
 
@@ -127,7 +126,7 @@ Content-Disposition: form-data; name="id"
 ----------1898913199
 Content-Disposition: form-data; name="age"
 
-2
+111111111111
 ----------1898913199
 Content-Disposition: form-data; name="user"
 
@@ -137,15 +136,62 @@ lufei
 
 # 正则分两部分，上下两部分
 # 上部分
-# Content-Disposition: form-data; name="id"
+# Content-Disposition: form-data; name="age"\n
 # \n
+# 111111111111
 
 # 下部分
-# xxxxx
-# \n
-# --
+# \n--
 
-param_tuple = re.finditer(r"(?si)((Content-Disposition[^\n]+?name\s*=\s*[\"']?(?P<name>[^\"'\r\n]+)[\"']?).+?\r?\n?)(((\r)?\n)+--)",req)
+param_tuple = re.finditer(r"(?si)((Content-Disposition[^\n]+?name\s*=\s*[\"']?(?P<name>[^\"'\r\n]+)[\"']?)((\r)?\n){2}(.*?))(((\r)?\n)+--)",req)
 for param in param_tuple:
-    print(param.group(3))
-    print(req[:param.regs[1][0]] + param.group(1) + "##" + req[param.regs[1][1]:])
+    print(param.group(3)) #age
+    print(param.group(6)) # 11111111
+    print(req[:param.regs[6][0]] + param.group(6) + "##" + req[param.regs[6][1]:])
+
+
+
+#url
+import re
+import urlparse
+
+req = """
+http://127.0.0.1/edit.php?id=ASD我==&name=aaaaaaaaaa
+"""
+
+parse_url = urlparse.urlparse(req)
+offset = req.index(parse_url.query)
+param_tuple = re.finditer(r'(.*?)=(.*?)(&|$)', parse_url.query)
+for param in param_tuple:
+    print(param.group(1)) #name
+    print(param.group(2)) #aaaaaaaaaa
+
+    #添加偏移
+    temp_param = (offset + param.regs[1][0],offset + param.regs[1][1])
+    temp_value = (offset + param.regs[2][0],offset + param.regs[2][1])
+
+    print(req[:temp_value[0]] + param.group(2) + "##" + req[temp_value[1]:])
+
+
+#cookie
+import re
+
+req = """
+GET /guest/edit.php?id=2 HTTP/1.1
+Host: 127.0.0.1
+Connection: close
+Accept-Encoding: gzip, deflate
+Accept: */*
+Cookie: name=11111-2222222; age=1111111111; Name=lufei-xxxxx
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.21
+"""
+
+req = """
+name=1111111111111-1111111111111-222222222; shshshfpb=20e287ea124fa4cf892abb8d3ad1d75185bfd1f490bb8387935de60477; TrackID=1z9BisvpQGAJbdPdtLvAbQJjZcFo-Qim-skQOU05VRVuJ5Eg4oim8nICoxH9lL1RmBpbaTLsYmEVlJs37QekKuzgIMELDlvOGCv3bdqNAlXM; __jdu=15433137290541176350556; __jdc=122270672; __jdv=122270672|direct|-|none|-|1553318548451; areaId=1; ipLoc-djd=1-72-0; PCSYCityID=1; user-key=8d648a00-7a22-45e7-a48c-3ed424440039; cn=0; __jda=122270672.15433137290541176350556.1543313729.1553318548.1553323258.11; __jdb=122270672.2.15433137290541176350556|11.1553323258; shshshfp=4fefe3cd78ffe0ec09b92fa9518ba8c9; shshshsID=a8ea895a2bb7902b6a6506b61ec5b4ed_2_1553323262437
+"""
+
+param_tuple = re.finditer(r'(\S*?)=(\S*?)(;|$)', req)
+for param in param_tuple:
+    print(param.group(1)) #name
+    print(param.group(2)) #1111111111111-1111111111111-222222222
+    print(req[:param.regs[2][0]] + param.group(2) + '##' + req[param.regs[2][1]:])

