@@ -167,7 +167,7 @@ class SqlChecker:
         req_info['data'] = req_info['data'] if req_info['data'] != None else ""
         req_info['cookie'] = req_info['cookie'] if req_info['cookie'] != None else ""
 
-        if SQLMARK in req_info['url'] or SQLMARK in str(req_info['headers']) or SQLMARK in req_info['data']:
+        if SQLMARK in req_info['url'] or SQLMARK in str(req_info['headers']) or SQLMARK in req_info['data'] or SQLMARK in str(req_info['cookie']):
             self.mark_flag = True
             if SQLMARK in req_info['url']:
                 for dbms in self.payload_dict:
@@ -177,7 +177,8 @@ class SqlChecker:
                         self.payload = payload
                         self.payload_dbms = dbms
 
-                        if self.dbms != '' and self.dbms != dbms:
+                        # self.payload_dict.has_key(self.dbms) 类似java .net报错，不属于任何数据库
+                        if self.dbms != '' and self.dbms != dbms and self.payload_dict.has_key(self.dbms):
                             # 通用的payload不管dbms是什么都一定跑完，因为其他的payload都有敏感字符，遇到waf就gg了
                             if self.payload_dbms != 'All':
                                 continue
@@ -193,7 +194,8 @@ class SqlChecker:
                         self.payload = payload
                         self.payload_dbms = dbms
 
-                        if self.dbms != '' and self.dbms != dbms:
+                        # self.payload_dict.has_key(self.dbms) 类似java .net报错，不属于任何数据库
+                        if self.dbms != '' and self.dbms != dbms and self.payload_dict.has_key(self.dbms):
                             if self.payload_dbms != 'All':
                                 continue
 
@@ -209,7 +211,9 @@ class SqlChecker:
                         self.payload_dbms = dbms
                         # header头是不会url解码的，所以对于headers进行解码
                         payload = urllib.unquote(payload)
-                        if self.dbms != '' and self.dbms != dbms:
+
+                        # self.payload_dict.has_key(self.dbms) 类似java .net报错，不属于任何数据库
+                        if self.dbms != '' and self.dbms != dbms and self.payload_dict.has_key(self.dbms):
                             if self.payload_dbms != 'All':
                                 continue
 
@@ -223,3 +227,19 @@ class SqlChecker:
 
                         self.send_request(req_poc_info, 'headers')
                 self.check_ratio()
+            if SQLMARK in str(req_info['cookie']):
+                for dbms in self.payload_dict:
+                    for payload in self.payload_dict[dbms]:
+                        # 深拷贝
+                        req_poc_info = req_info.copy()
+                        self.payload = payload
+                        self.payload_dbms = dbms
+
+                        # self.payload_dict.has_key(self.dbms) 类似java .net报错，不属于任何数据库
+                        if self.dbms != '' and self.dbms != dbms and self.payload_dict.has_key(self.dbms):
+                            if self.payload_dbms != 'All':
+                                continue
+
+                        req_poc_info['headers']['Cookie'] = req_info['cookie'].replace(SQLMARK, payload)
+                    self.send_request(req_poc_info, 'headers')
+            self.check_ratio()

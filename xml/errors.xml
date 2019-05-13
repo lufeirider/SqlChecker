@@ -74,15 +74,23 @@
         <error regexp="oracle\.jdbc\.driver"/>
         <error regexp="quoted string not properly terminated"/>
         <error regexp="SQL command not properly ended"/>
-        <!--自己添加-->
+    </dbms>
+
+    <!--自己添加-->
+    <!--Java-->
+    <dbms value="Java">
         <error regexp="The full stack trace of the root cause is available in the Apache"/>
     </dbms>
 
+    <!--自己添加-->
+    <!--.net-->
+    <dbms value=".Net">
+        <error regexp="!-- Web.Config"/>
+    </dbms>
 
     <!--自己添加-->
     <!-- PostgreSQL -->
     <dbms value="Hibernate">
-        <!--自己添加-->
         <error regexp="org.hibernate.QueryException: unexpected char"/>
     </dbms>
 
