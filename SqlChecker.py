@@ -127,33 +127,33 @@ class SqlChecker:
 
 
     # 发送请求包，并判断注入
-    def send_request(self,req_poc_info,type):
-        if req_poc_info['method'] == 'POST':
+    def send_request(self,req_info,type):
+        if req_info['method'] == 'POST':
             try:
                 # 显示参数和poc
-                print(req_poc_info[type])
+                print(req_info[type])
                 #这里allow_redirects禁止跟随是因为有些网站他会跳转到http://about:blank不是域名的地方导致异常
-                rsp = requests.post(req_poc_info['url'], data=req_poc_info['data'], headers=req_poc_info['headers'], proxies=g_proxy, timeout=TIMEOUT,verify=False, allow_redirects=False)
+                rsp = requests.post(req_info['url'], data=req_info['data'], headers=req_info['headers'], proxies=g_proxy, timeout=TIMEOUT,verify=False, allow_redirects=False)
                 self.html = rsp.content
                 self.check_dbms_error()
                 self.check_boolean_inject()
             except requests.exceptions.Timeout:
-                #这里没有使用print(req_poc_info[type]+'存在sql注入')是因为req_poc_info[type]类型不确定，可能是字典或者字符串
-                self.result_list.append({'type': 'time', 'dbms': self.payload_dbms, 'payload': self.payload, 'position': type, 'poc': req_poc_info[type]})
+                #这里没有使用print(req_info[type]+'存在sql注入')是因为req_info[type]类型不确定，可能是字典或者字符串
+                self.result_list.append({'type': 'time', 'dbms': self.payload_dbms, 'payload': self.payload, 'position': type, 'poc': req_info[type]})
                 self.out_result()
                 exit()
             except:
                 pass
-        if req_poc_info['method'] == 'GET':
+        if req_info['method'] == 'GET':
             try:
                 # 显示参数和poc
-                print(req_poc_info[type])
-                rsp = requests.get(req_poc_info['url'], headers=req_poc_info['headers'], proxies=g_proxy, timeout=TIMEOUT, verify=False,allow_redirects=False)
+                print(req_info[type])
+                rsp = requests.get(req_info['url'], headers=req_info['headers'], proxies=g_proxy, timeout=TIMEOUT, verify=False,allow_redirects=False)
                 self.html = rsp.content
                 self.check_dbms_error()
                 self.check_boolean_inject()
             except requests.exceptions.Timeout:
-                self.result_list.append({'type': 'time', 'dbms': self.payload_dbms, 'payload': self.payload,'position':type,'poc':req_poc_info[type]})
+                self.result_list.append({'type': 'time', 'dbms': self.payload_dbms, 'payload': self.payload,'position':type,'poc':req_info[type]})
                 self.out_result()
                 exit()
             except:
@@ -167,7 +167,7 @@ class SqlChecker:
         req_info['data'] = req_info['data'] if req_info['data'] != None else ""
         req_info['cookie'] = req_info['cookie'] if req_info['cookie'] != None else ""
 
-        if SQLMARK in req_info['url'] or SQLMARK in str(req_info['headers']) or SQLMARK in req_info['data'] or SQLMARK in str(req_info['cookie']):
+        if SQLMARK in req_info['url'] or SQLMARK in str(req_info['headers']) or SQLMARK in req_info['data']:
             self.mark_flag = True
             if SQLMARK in req_info['url']:
                 for dbms in self.payload_dict:
@@ -221,20 +221,5 @@ class SqlChecker:
                         for header in req_info['headers']:
                             req_poc_info['headers'][header] = (req_info['headers'][header]).replace(SQLMARK, payload)
 
-                        self.send_request(req_poc_info, 'headers')
-                self.check_ratio()
-            if SQLMARK in str(req_info['cookie']):
-                for dbms in self.payload_dict:
-                    for payload in self.payload_dict[dbms]:
-                        # 深拷贝
-                        req_poc_info = req_info.copy()
-                        self.payload = payload
-                        self.payload_dbms = dbms
-
-                        if self.dbms != '' and self.dbms != dbms:
-                            if self.payload_dbms != 'All':
-                                continue
-
-                        req_poc_info['headers']['Cookie'] = req_info['cookie'].replace(SQLMARK, payload)
                         self.send_request(req_poc_info, 'headers')
                 self.check_ratio()
