@@ -86,6 +86,10 @@
     <!--.net-->
     <dbms value=".Net">
         <error regexp="!-- Web.Config"/>
+        <!--字符串 '138'' 后的引号不完整。-->
+        <error regexp=" '.*?'' "/>
+        <!--字符串 '138'' 后的引号不完整。 可能有编码上的坑-->
+        <error regexp=" '.*?' .*?。"/>
     </dbms>
 
     <!--自己添加-->

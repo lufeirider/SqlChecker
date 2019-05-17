@@ -86,7 +86,7 @@ class SqlChecker:
 
                 if tag == "error":
                     regexp = attr["regexp"]
-                    if re.search(regexp, out_self.html):
+                    if re.search(regexp, unicode(out_self.html,errors='replace')):
                         if out_self.dbms == '':
                             out_self.dbms = self.dbms
                             out_self.result_list.append({'type': 'error', 'dbms': self.dbms, 'payload': out_self.payload})
@@ -156,7 +156,8 @@ class SqlChecker:
                 self.result_list.append({'type': 'time', 'dbms': self.payload_dbms, 'payload': self.payload,'position':type,'poc':req_info[type]})
                 self.out_result()
                 exit()
-            except:
+            except Exception,e:
+                print(e)
                 pass
 
     # 对注入标记进行处理，判断注入
@@ -202,6 +203,23 @@ class SqlChecker:
                         req_poc_info['data'] = req_info['data'].replace(SQLMARK, payload)
                         self.send_request(req_poc_info, 'data')
                 self.check_ratio()
+            # cookie放在header类型之前，因为cookie存在注入，需要url编码，而headers都设置为解码的
+            if SQLMARK in str(req_info['cookie']):
+                for dbms in self.payload_dict:
+                    for payload in self.payload_dict[dbms]:
+                        # 深拷贝
+                        req_poc_info = req_info.copy()
+                        self.payload = payload
+                        self.payload_dbms = dbms
+
+                        # self.payload_dict.has_key(self.dbms) 类似java .net报错，不属于任何数据库
+                        if self.dbms != '' and self.dbms != dbms and self.payload_dict.has_key(self.dbms):
+                            if self.payload_dbms != 'All':
+                                continue
+
+                        req_poc_info['headers']['Cookie'] = req_info['cookie'].replace(SQLMARK, payload)
+                        self.send_request(req_poc_info, 'headers')
+                self.check_ratio()
             if SQLMARK in str(req_info['headers']):
                 for dbms in self.payload_dict:
                     for payload in self.payload_dict[dbms]:
@@ -227,19 +245,3 @@ class SqlChecker:
 
                         self.send_request(req_poc_info, 'headers')
                 self.check_ratio()
-            if SQLMARK in str(req_info['cookie']):
-                for dbms in self.payload_dict:
-                    for payload in self.payload_dict[dbms]:
-                        # 深拷贝
-                        req_poc_info = req_info.copy()
-                        self.payload = payload
-                        self.payload_dbms = dbms
-
-                        # self.payload_dict.has_key(self.dbms) 类似java .net报错，不属于任何数据库
-                        if self.dbms != '' and self.dbms != dbms and self.payload_dict.has_key(self.dbms):
-                            if self.payload_dbms != 'All':
-                                continue
-
-                        req_poc_info['headers']['Cookie'] = req_info['cookie'].replace(SQLMARK, payload)
-                    self.send_request(req_poc_info, 'headers')
-            self.check_ratio()
