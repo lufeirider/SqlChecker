@@ -62,6 +62,7 @@
         <error regexp="Syntax error \(missing operator\) in query expression"/>
         <!--自己添加-->
         <error regexp="Microsoft JET Database Engine"/>
+        <error regexp="Microsoft OLE DB Provider for ODBC Drivers"/>
     </dbms>
 
     <!-- Oracle -->
@@ -130,6 +131,7 @@
         <error regexp="\[SQLITE_ERROR\]"/>
         <error regexp="SQLite error \d+:"/>
         <error regexp="sqlite3.OperationalError:"/>
+        <error regexp="System.Data.SQLite."/>
     </dbms>
 
     <!-- SAP MaxDB -->

