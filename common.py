@@ -108,7 +108,7 @@ def get_right_resp(req_info):
                 req_right_info['headers'][header] = (req_info['headers'][header]).replace(SQLMARK, "")
 
             rsp = requests.post(req_right_info['url'], data=req_right_info['data'], headers=req_right_info['headers'], proxies=g_proxy, timeout=TIMEOUT,verify=False, allow_redirects=False)
-            g_sql_info.true_content = rsp.content
+            g_sql_info.true_content = rsp.text
         except Exception, err:
             print(err)
     if req_info['method'] == 'GET':
@@ -119,6 +119,6 @@ def get_right_resp(req_info):
             for header in req_info['headers']:
                 req_right_info['headers'][header] = (req_info['headers'][header]).replace(SQLMARK, "")
             rsp = requests.get(req_right_info['url'], headers=req_right_info['headers'], proxies=g_proxy, timeout=TIMEOUT, verify=False,allow_redirects=False)
-            g_sql_info.true_content = rsp.content
+            g_sql_info.true_content = rsp.text
         except Exception,err:
             print(err)

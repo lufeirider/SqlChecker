@@ -86,7 +86,7 @@ class SqlChecker:
 
                 if tag == "error":
                     regexp = attr["regexp"]
-                    if re.search(regexp, unicode(out_self.html,errors='replace')):
+                    if re.search(regexp, out_self.html):
                         if out_self.dbms == '':
                             out_self.dbms = self.dbms
                             out_self.result_list.append({'type': 'error', 'dbms': self.dbms, 'payload': out_self.payload})
@@ -134,7 +134,7 @@ class SqlChecker:
                 print(req_info[type])
                 #这里allow_redirects禁止跟随是因为有些网站他会跳转到http://about:blank不是域名的地方导致异常
                 rsp = requests.post(req_info['url'], data=req_info['data'], headers=req_info['headers'], proxies=g_proxy, timeout=TIMEOUT,verify=False, allow_redirects=False)
-                self.html = rsp.content
+                self.html = rsp.text
                 self.check_dbms_error()
                 self.check_boolean_inject()
             except requests.exceptions.Timeout:
@@ -149,7 +149,7 @@ class SqlChecker:
                 # 显示参数和poc
                 print(req_info[type])
                 rsp = requests.get(req_info['url'], headers=req_info['headers'], proxies=g_proxy, timeout=TIMEOUT, verify=False,allow_redirects=False)
-                self.html = rsp.content
+                self.html = rsp.text
                 self.check_dbms_error()
                 self.check_boolean_inject()
             except requests.exceptions.Timeout:
