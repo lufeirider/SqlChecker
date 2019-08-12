@@ -93,6 +93,7 @@
         <error regexp=" '.*?' .*?。"/>
         <!--附近有语法错误。\r\n字符串 \u0027\u0027 后的引号不完整-->
         <error regexp="后的引号不完整。"/>
+        <error regexp='pre {font-family:"Consolas","Lucida Console",Monospace;font-size:11pt;margin:0;padding:0.5em;line-height:14pt}'/>
     </dbms>
 
     <!--自己添加-->

